@@ -1,0 +1,16 @@
+Bug report:
+Users report that uploaded PDFs sometimes appear to index successfully, but follow-up questions return empty or unrelated answers.
+
+Observed symptoms:
+- the UI shows a success message after indexing
+- the question box accepts input normally
+- answers are sometimes generic or refer to older uploads
+- the issue appears more often after multiple demos in the same session
+
+Recent changes:
+- added session-scoped LightRAG workspaces
+- added document refresh and clear buttons
+- changed the app entrypoint from app.py to main.py
+
+Expected behavior:
+Questions should only answer from the documents uploaded in the current session and should cite the current session sources.

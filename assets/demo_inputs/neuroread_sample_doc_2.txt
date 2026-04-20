@@ -1,0 +1,7 @@
+Cache-Augmented Generation works well when the source material already fits inside the model context window. Instead of retrieving chunks from a larger knowledge base, the system places the relevant material directly into the prompt and asks the model to transform it into another learning artifact.
+
+In education, CAG is especially useful for quizzes, flashcards, summaries, and study plans. If a student pastes one chapter of notes or a short transcript, the model can work directly from that text and generate useful study outputs quickly. This makes CAG simpler than a full retrieval pipeline for many single-document workflows.
+
+The downside is scale. CAG becomes harder to use when the source material grows too large or when the learner wants to ask questions across many different documents. In those cases, RAG becomes a better fit because it can search across a larger source collection and bring back only the most relevant evidence.
+
+The strongest learning platforms use both patterns. They use RAG for grounded multi-document question answering, and they use CAG when the learner wants to transform one known source into quizzes, guides, or plans. Choosing the right pattern for the right task leads to better answers and a better learning experience.

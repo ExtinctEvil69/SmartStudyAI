@@ -1,0 +1,14 @@
+Design a learning platform with the following services:
+
+- API gateway for web and mobile clients
+- authentication service for sign-in and session tokens
+- user profile service for learner preferences and progress
+- content ingestion service for PDFs, notes, transcripts, and URLs
+- retrieval service that indexes documents into a graph-backed RAG pipeline
+- generation service that calls a local Gemma model through Ollama
+- quiz service that creates assessments and scores answers
+- media service that produces audio narration from generated scripts
+- analytics service for learning activity and content usage
+- notification service for reminders and study streak updates
+
+The system should use asynchronous jobs for long-running ingestion and indexing tasks, cache common queries, and support both web and mobile clients.

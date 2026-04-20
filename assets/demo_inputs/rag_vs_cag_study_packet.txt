@@ -1,0 +1,11 @@
+RAG and CAG are two different patterns for building useful educational AI systems.
+
+Retrieval-Augmented Generation, or RAG, is used when the model should answer from external source material rather than relying only on its pretrained knowledge. A typical RAG workflow stores documents, retrieves relevant chunks at question time, and then asks the model to answer using those retrieved passages. This is useful for research papers, class notes, policy documents, and technical manuals. The main advantage is grounding: the system can cite the material it used. The main risk is retrieval quality. If the wrong chunks are retrieved, the answer may still sound fluent while being incomplete or misleading.
+
+Cache-Augmented Generation, or CAG, is different. Instead of retrieving chunks at question time, the system loads the full source material directly into the model context and asks it to generate an output such as a study guide, quiz, summary, or flashcards. CAG works well when the source content is already small enough to fit in context. It is often faster to implement and easier to reason about than a full RAG system. However, it does not scale as well to very large collections of documents.
+
+For education, the best system often combines both approaches. RAG is strong for grounded question answering over multiple uploaded documents. CAG is strong for transforming a single known source into useful learning artifacts such as summaries, study plans, and quizzes. An ideal study platform can switch between both approaches depending on the task.
+
+Good educational AI should do more than answer questions. It should help learners build understanding through active recall, spaced repetition, and progressive difficulty. A high-quality quiz generator should include explanations, not just answers. A strong study-plan generator should balance coverage, repetition, and realistic workload. A useful research assistant should distinguish between well-supported claims and uncertain claims.
+
+In practice, session memory also matters. Learners rarely ask one isolated question. They ask a sequence of follow-up questions, refine their understanding, and revisit earlier points. An educational system that preserves conversational context can feel significantly more helpful, especially when it also stays grounded in the source material.

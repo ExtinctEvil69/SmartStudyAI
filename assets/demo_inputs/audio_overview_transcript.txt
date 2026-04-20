@@ -1,0 +1,9 @@
+Welcome back to the Learning Systems Podcast. Today we are comparing two study habits that sound similar but work very differently in practice: rereading and active recall.
+
+Rereading feels productive because the material becomes familiar. The learner sees the same definitions, examples, and headings multiple times. That familiarity creates confidence, but it can also create an illusion of mastery. When the book is open, everything looks understandable. The real test comes when the learner has to explain the concept without support.
+
+Active recall is more demanding. Instead of reviewing the answer directly, the learner tries to retrieve it from memory. That might mean answering a flashcard, summarizing a topic from memory, solving a practice problem, or explaining a concept out loud. Retrieval is harder than rereading, but the effort strengthens memory and exposes gaps much more clearly.
+
+Spaced repetition improves active recall even more. If a student reviews the same idea right before forgetting it, the memory trace becomes stronger. Over time, the gap between reviews can increase. This is why well-designed flashcards and study plans outperform passive review for long-term retention.
+
+The big takeaway is simple: familiarity is not the same as understanding. Strong learners test themselves, revisit material over time, and use mistakes as signals about what to study next.

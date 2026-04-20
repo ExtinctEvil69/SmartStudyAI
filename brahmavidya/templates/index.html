@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrahmaVidya — Unified Learning Ecosystem</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Processing...</div>
+</div>
+
+<!-- Mobile Toggle -->
+<div class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</div>
+
+<div class="app-shell">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🎓</div>
+            <h1>BrahmaVidya</h1>
+            <div class="subtitle">Gemma-powered learning</div>
+        </div>
+
+        <div class="status-row" id="statusRow">
+            <span class="status-pill amber"><span class="dot"></span> Checking...</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-label memory">Memory</div>
+                <div class="nav-item active" data-tool="dashboard" onclick="switchTool('dashboard')">
+                    <span class="nav-icon">🧠</span> Vidya Smriti
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-label study">Study</div>
+                <div class="nav-item" data-tool="netseek" onclick="switchTool('netseek')">
+                    <span class="nav-icon">🔍</span> NetSeek
+                </div>
+                <div class="nav-item" data-tool="neuroread" onclick="switchTool('neuroread')">
+                    <span class="nav-icon">📖</span> NeuroRead
+                </div>
+                <div class="nav-item" data-tool="edutube" onclick="switchTool('edutube')">
+                    <span class="nav-icon">🎬</span> EduTube
+                </div>
+                <div class="nav-item" data-tool="quizforge" onclick="switchTool('quizforge')">
+                    <span class="nav-icon">📝</span> QuizForge
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-label create">Create</div>
+                <div class="nav-item" data-tool="mindmapper" onclick="switchTool('mindmapper')">
+                    <span class="nav-icon">🗺️</span> MindMapper
+                </div>
+                <div class="nav-item" data-tool="prepmaster" onclick="switchTool('prepmaster')">
+                    <span class="nav-icon">📋</span> PrepMaster
+                </div>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>Built for Gemma 4 Good Hackathon<br>Kaggle × Google DeepMind</p>
+        </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="main-content">
+        <div class="content-area">
+
+            <!-- ─── DASHBOARD ─── -->
+            <div class="tool-page active" id="page-dashboard">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🧠</div>
+                        <div>
+                            <h2>Vidya Smriti — Learning Memory</h2>
+                            <span class="badge">Shared Memory</span>
+                        </div>
+                    </div>
+                    <p class="description">Persistent cross-tool memory layer. Tracks mastery, study streaks, activity timelines, and delivers personalized recommendations.</p>
+                </div>
+
+                <div class="kpi-row" id="dashboardKpis">
+                    <div class="kpi-card"><div class="kpi-value" id="kpiStreak">0</div><div class="kpi-label">Day Streak</div></div>
+                    <div class="kpi-card"><div class="kpi-value" id="kpiEvents">0</div><div class="kpi-label">Total Activities</div></div>
+                    <div class="kpi-card"><div class="kpi-value" id="kpiContent">0</div><div class="kpi-label">Content Items</div></div>
+                    <div class="kpi-card"><div class="kpi-value" id="kpiTools">0</div><div class="kpi-label">Tools Used</div></div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-title">📊 Topic Mastery</div>
+                        <div id="masteryBars"><p style="color:var(--text-muted);font-size:0.82rem;">No mastery data yet. Complete quizzes to track progress.</p></div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-title">💡 Recommendations</div>
+                        <div id="recommendations"><p style="color:var(--text-muted);font-size:0.82rem;">Start studying to get personalized recommendations.</p></div>
+                    </div>
+                </div>
+
+                <div class="widget" style="margin-bottom:24px;">
+                    <div class="widget-title">📅 Recent Activity</div>
+                    <div id="recentEvents"><p style="color:var(--text-muted);font-size:0.82rem;">No activity yet.</p></div>
+                </div>
+
+                <div class="widget">
+                    <div class="widget-title">👤 Learner Profile</div>
+                    <div class="form-row" style="margin-top:12px;">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="profileName" placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Learning Style</label>
+                            <select id="profileStyle">
+                                <option value="visual">Visual</option>
+                                <option value="auditory">Auditory</option>
+                                <option value="reading">Reading/Writing</option>
+                                <option value="kinesthetic">Kinesthetic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Goals (comma-separated)</label>
+                        <input type="text" id="profileGoals" placeholder="e.g. Master calculus, Learn ML basics">
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="saveProfile()">Save Profile</button>
+                </div>
+            </div>
+
+            <!-- ─── NETSEEK ─── -->
+            <div class="tool-page" id="page-netseek">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🔍</div>
+                        <div>
+                            <h2>NetSeek — Web Research</h2>
+                            <span class="badge">Research</span>
+                        </div>
+                    </div>
+                    <p class="description">Search the web, synthesize the results, and keep the source trail visible.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Research Query</label>
+                        <input type="text" id="netseekQuery" placeholder="e.g. Recent advances in CRISPR gene editing">
+                    </div>
+                    <div class="form-group">
+                        <label>Additional Context (optional)</label>
+                        <textarea id="netseekContext" rows="2" placeholder="e.g. Focus on therapeutic applications in 2024-2025"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Research Depth</label>
+                            <select id="netseekDepth">
+                                <option>Quick overview</option>
+                                <option>Detailed analysis</option>
+                                <option>Comprehensive report</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Output Format</label>
+                            <select id="netseekFormat">
+                                <option>Summary</option>
+                                <option>Bullet points</option>
+                                <option>Academic style</option>
+                                <option>ELI5</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="runNetSeek()">🔍 Research</button>
+                </div>
+                <div id="netseekResult"></div>
+            </div>
+
+            <!-- ─── NEUROREAD ─── -->
+            <div class="tool-page" id="page-neuroread">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">📖</div>
+                        <div>
+                            <h2>NeuroRead — Document Q&A</h2>
+                            <span class="badge">Documents</span>
+                        </div>
+                    </div>
+                    <p class="description">Upload documents and ask questions grounded in their content.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Upload Document (PDF, TXT, MD)</label>
+                        <input type="file" id="neuroreadFile" accept=".pdf,.txt,.md" style="color:var(--text-secondary);">
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="uploadDocument()">📤 Upload & Extract</button>
+                    <div id="neuroreadStatus" style="margin-top:12px;"></div>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Or paste your content directly</label>
+                        <textarea id="neuroreadContent" rows="6" placeholder="Paste document text here..."></textarea>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ask a Question</label>
+                            <input type="text" id="neuroreadQuestion" placeholder="What are the key findings?">
+                        </div>
+                        <div class="form-group">
+                            <label>Answer Mode</label>
+                            <select id="neuroreadMode">
+                                <option value="detailed">Detailed</option>
+                                <option value="concise">Concise</option>
+                                <option value="study_guide">Study Guide</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="askNeuroRead()">💬 Ask</button>
+                </div>
+                <div id="neuroreadResult"></div>
+            </div>
+
+            <!-- ─── EDUTUBE ─── -->
+            <div class="tool-page" id="page-edutube">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🎬</div>
+                        <div>
+                            <h2>EduTube — YouTube Study Notes</h2>
+                            <span class="badge">Video</span>
+                        </div>
+                    </div>
+                    <p class="description">Load a YouTube transcript or paste your own, then generate study material.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="tabs" id="edutubeTabs">
+                        <button class="tab active" onclick="switchEdutubeTab('url')">YouTube URL</button>
+                        <button class="tab" onclick="switchEdutubeTab('paste')">Paste Transcript</button>
+                    </div>
+
+                    <div id="edutubeUrlTab">
+                        <div class="form-group">
+                            <label>YouTube URL or Video ID</label>
+                            <input type="text" id="edutubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="fetchTranscript()">📥 Fetch Transcript</button>
+                    </div>
+
+                    <div id="edutubePasteTab" style="display:none;">
+                        <div class="form-group">
+                            <label>Paste Transcript</label>
+                            <textarea id="edutubeTranscript" rows="6" placeholder="Paste the YouTube transcript here..."></textarea>
+                        </div>
+                    </div>
+
+                    <div id="edutubeStatus" style="margin-top:12px;"></div>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Generate</label>
+                            <select id="edutubeOutputType">
+                                <option>Study Notes</option>
+                                <option>Summary</option>
+                                <option>Flashcards</option>
+                                <option>Key Concepts</option>
+                                <option>Quiz Prep Notes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject (optional)</label>
+                            <input type="text" id="edutubeSubject" placeholder="e.g. Machine Learning">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateEduTube()">✨ Generate</button>
+                </div>
+                <div id="edutubeResult"></div>
+            </div>
+
+            <!-- ─── QUIZFORGE ─── -->
+            <div class="tool-page" id="page-quizforge">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">📝</div>
+                        <div>
+                            <h2>QuizForge — Adaptive Quizzes</h2>
+                            <span class="badge">Assessment</span>
+                        </div>
+                    </div>
+                    <p class="description">Generate quizzes with Bloom's taxonomy coverage, difficulty mixing, and explanations.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Study Content</label>
+                        <textarea id="quizContent" rows="6" placeholder="Paste the content you want to be quizzed on..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" id="quizSubject" placeholder="e.g. Biology">
+                        </div>
+                        <div class="form-group">
+                            <label>Topic</label>
+                            <input type="text" id="quizTopic" placeholder="e.g. Cell Division">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Number of Questions</label>
+                            <select id="quizCount">
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <select id="quizDifficulty">
+                                <option value="mixed" selected>Mixed</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateQuiz()">📝 Generate Quiz</button>
+                </div>
+                <div id="quizArea"></div>
+            </div>
+
+            <!-- ─── MINDMAPPER ─── -->
+            <div class="tool-page" id="page-mindmapper">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🗺️</div>
+                        <div>
+                            <h2>MindMapper — Visual Mind Maps</h2>
+                            <span class="badge">Visualization</span>
+                        </div>
+                    </div>
+                    <p class="description">Generate interactive mind maps from any content using Mermaid.js.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Content to Map</label>
+                        <textarea id="mindmapContent" rows="6" placeholder="Paste the content you want to visualize as a mind map..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Topic</label>
+                            <input type="text" id="mindmapTopic" placeholder="e.g. Machine Learning">
+                        </div>
+                        <div class="form-group">
+                            <label>Style</label>
+                            <select id="mindmapStyle">
+                                <option value="hierarchical">Hierarchical</option>
+                                <option value="radial">Radial</option>
+                                <option value="detailed">Detailed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateMindMap()">🗺️ Generate Mind Map</button>
+                </div>
+                <div id="mindmapResult"></div>
+            </div>
+
+            <!-- ─── PREPMASTER ─── -->
+            <div class="tool-page" id="page-prepmaster">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">📋</div>
+                        <div>
+                            <h2>PrepMaster — Study Plans</h2>
+                            <span class="badge">Planning</span>
+                        </div>
+                    </div>
+                    <p class="description">Generate personalized study plans and comprehensive study guides.</p>
+                </div>
+
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchPrepTab('plan')">Study Plan</button>
+                        <button class="tab" onclick="switchPrepTab('guide')">Study Guide</button>
+                    </div>
+
+                    <div id="prepPlanTab">
+                        <div class="form-group">
+                            <label>Study Content</label>
+                            <textarea id="prepContent" rows="6" placeholder="Paste your study material here..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Goal</label>
+                            <input type="text" id="prepGoal" placeholder="e.g. Master calculus for final exam">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duration (weeks)</label>
+                                <input type="number" id="prepWeeks" value="4" min="1" max="16">
+                            </div>
+                            <div class="form-group">
+                                <label>Hours per week</label>
+                                <input type="number" id="prepHours" value="10" min="1" max="40">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateStudyPlan()">📋 Generate Plan</button>
+                    </div>
+
+                    <div id="prepGuideTab" style="display:none;">
+                        <div class="form-group">
+                            <label>Study Content</label>
+                            <textarea id="guideContent" rows="6" placeholder="Paste your study material here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateStudyGuide()">📚 Generate Guide</button>
+                    </div>
+                </div>
+                <div id="prepResult"></div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

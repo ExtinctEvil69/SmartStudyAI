@@ -1,0 +1,26 @@
+# Core
+streamlit>=1.32
+requests>=2.31
+pypdf>=4.2
+python-dotenv>=1.0
+beautifulsoup4>=4.12
+
+# AI APIs
+anthropic>=0.40
+ollama>=0.4
+gTTS>=2.5
+
+# Document processing
+pymupdf>=1.24
+
+# Visualization (MindMapper, CodeFlow)
+plotly>=5.18
+numpy>=1.26
+sympy>=1.12
+
+# Integrations
+duckduckgo-search>=6.1
+youtube-transcript-api>=0.6.2
+
+# LightRAG (installed separately from ./LightRAG)
+# pip install -e "./LightRAG[api]"

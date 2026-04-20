@@ -1,0 +1,15 @@
+# BrahmaVidya — FastAPI Learning Ecosystem
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+jinja2>=3.1.0
+python-multipart>=0.0.7
+
+# Shared with SmartStudy core engines
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+duckduckgo-search>=5.0.0
+youtube-transcript-api>=0.6.0
+python-dotenv>=1.0.0
+
+# Optional: PDF extraction
+PyMuPDF>=1.23.0

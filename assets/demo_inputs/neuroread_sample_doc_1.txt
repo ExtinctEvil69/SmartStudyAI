@@ -1,0 +1,7 @@
+Retrieval-Augmented Generation is useful when answers must come from source material rather than the model's general memory. In educational settings, that matters because learners often ask for explanations grounded in lecture notes, uploaded papers, course handouts, or official readings.
+
+A well-designed RAG workflow has three critical steps. First, the system must index the source material in a way that preserves meaning and allows relevant chunks to be retrieved. Second, the retrieval step must identify the most relevant pieces of evidence for the current question. Third, the generation step must answer using those retrieved passages rather than drifting into unsupported claims.
+
+The main benefit of RAG in education is trust. Students and instructors can inspect the source material behind an answer. This makes the system more useful for academic workflows than a purely free-form chatbot. The main weakness is that bad retrieval leads to bad grounding. If the wrong passages are retrieved, the answer may still sound convincing while missing the real point.
+
+For that reason, educational RAG systems should expose references, make it easy to inspect sources, and handle follow-up questions without losing context. A learner often asks a sequence of questions: first for a definition, then for a comparison, then for an example, then for a summary. A system that can stay grounded while remembering the conversational thread feels much more helpful.
