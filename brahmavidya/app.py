@@ -25,6 +25,10 @@ from brahmavidya.tools.neuroread import router as neuroread_router
 from brahmavidya.tools.mindmapper import router as mindmapper_router
 from brahmavidya.tools.prepmaster import router as prepmaster_router
 from brahmavidya.tools.smriti_api import router as smriti_router
+from brahmavidya.tools.agent_api import router as agent_router
+from brahmavidya.tools.generic_tool import router as tools_router
+from brahmavidya.tools.graphiq import router as graphiq_router
+from brahmavidya.tools.audio_overview import router as audio_router
 
 app = FastAPI(title="BrahmaVidya", version="1.0.0")
 
@@ -67,3 +71,7 @@ app.include_router(neuroread_router, prefix="/api/neuroread", tags=["NeuroRead"]
 app.include_router(mindmapper_router, prefix="/api/mindmapper", tags=["MindMapper"])
 app.include_router(prepmaster_router, prefix="/api/prepmaster", tags=["PrepMaster"])
 app.include_router(smriti_router, prefix="/api/smriti", tags=["VidyaSmriti"])
+app.include_router(agent_router, prefix="/api/agent", tags=["StudyAgent"])
+app.include_router(tools_router, prefix="/api/tools", tags=["GenericTools"])
+app.include_router(graphiq_router, prefix="/api/graphiq", tags=["GraphiQ"])
+app.include_router(audio_router, prefix="/api/audio", tags=["AudioOverview"])

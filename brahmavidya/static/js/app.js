@@ -26,13 +26,20 @@ function switchTool(tool) {
     state.currentTool = tool;
     document.querySelectorAll('.tool-page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const page = document.getElementById(`page-${tool}`);
+
+    // Generic tools use the shared #page-generic shell, configured at runtime.
+    let pageId = tool;
+    if (tool.startsWith('generic:')) {
+        pageId = 'generic';
+        const toolId = tool.split(':')[1];
+        renderGenericPage(toolId);
+    }
+
+    const page = document.getElementById(`page-${pageId}`);
     const nav = document.querySelector(`.nav-item[data-tool="${tool}"]`);
     if (page) page.classList.add('active');
     if (nav) nav.classList.add('active');
-    // Close mobile sidebar
     document.querySelector('.sidebar').classList.remove('open');
-    // Refresh dashboard when switching to it
     if (tool === 'dashboard') loadDashboard();
 }
 
@@ -530,6 +537,474 @@ async function generateStudyGuide() {
     } catch (err) {
         document.getElementById('prepResult').innerHTML =
             `<div class="alert alert-error">Error: ${err.message}</div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STUDYAGENT — Plan → Execute → Verify → Record
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ACTION_ICONS = {
+    research: '🔍',
+    study_notes: '📝',
+    key_concepts: '💡',
+    summarize: '📋',
+    quiz: '✅',
+};
+
+const agent = {
+    goal: '',
+    topic: '',
+    rationale: '',
+    plan: [],
+    session: null,
+    quizAnswers: {},
+};
+
+async function agentCreatePlan() {
+    const goal = document.getElementById('agentGoal').value.trim();
+    const topic = document.getElementById('agentTopic').value.trim();
+    if (!goal || !topic) return alert('Provide both a goal and a topic.');
+
+    agent.goal = goal;
+    agent.topic = topic;
+    document.getElementById('agentPlanArea').innerHTML = '';
+    document.getElementById('agentExecArea').innerHTML = '';
+    document.getElementById('agentQuizArea').innerHTML = '';
+    document.getElementById('agentReportArea').innerHTML = '';
+
+    showLoading('Exploring memory & planning...');
+    try {
+        const data = await api('/api/agent/plan', { goal, topic });
+        agent.plan = data.plan || [];
+        agent.rationale = data.rationale || '';
+        renderPlan(data);
+    } catch (err) {
+        document.getElementById('agentPlanArea').innerHTML =
+            `<div class="alert alert-error">Plan failed: ${err.message}</div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderPlan(data) {
+    const masteryNote = data.mastery_before > 0
+        ? `Prior mastery on <strong>${data.topic}</strong>: <strong style="color:var(--accent-bright);">${Math.round(data.mastery_before)}%</strong>`
+        : `<strong>No prior mastery</strong> tracked for this topic — fresh start.`;
+
+    const stepsHtml = (data.plan || []).map((s, i) => `
+        <div class="glass-card" style="display:flex;gap:14px;align-items:flex-start;padding:14px 18px;margin-bottom:8px;">
+            <div style="background:linear-gradient(135deg,#FFB84D,#FF9F2D);color:#fff;font-weight:700;
+                        width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+                        justify-content:center;flex-shrink:0;font-size:0.78rem;">${i + 1}</div>
+            <div style="flex:1;">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:2px;">
+                    <span style="font-size:1rem;">${ACTION_ICONS[s.action] || '⚙️'}</span>
+                    <strong style="color:var(--accent-bright);font-size:0.88rem;">${s.action}</strong>
+                </div>
+                <div style="color:var(--text-secondary);font-size:0.82rem;line-height:1.5;">${s.goal}</div>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('agentPlanArea').innerHTML = `
+        <div class="result-container">
+            <h3>📋 Proposed Plan (${(data.plan || []).length} steps)</h3>
+            <div class="alert alert-info" style="margin-bottom:14px;">${masteryNote}</div>
+            ${data.rationale ? `<div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:14px;line-height:1.6;"><strong>Rationale:</strong> ${data.rationale}</div>` : ''}
+            ${stepsHtml}
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button class="btn btn-primary" onclick="agentExecutePlan()">▶️ Approve & Execute</button>
+                <button class="btn btn-secondary" onclick="agentCreatePlan()">🔄 Replan</button>
+            </div>
+        </div>`;
+}
+
+async function agentExecutePlan() {
+    if (!agent.plan.length) return;
+
+    // Render execution shell with pending steps
+    const stepShell = agent.plan.map((s, i) => `
+        <div class="glass-card" id="agent-step-${i}" style="display:flex;gap:14px;align-items:flex-start;padding:16px 20px;margin-bottom:10px;">
+            <div id="agent-step-status-${i}" style="background:var(--bg-card);color:var(--text-muted);font-weight:700;
+                        width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+                        justify-content:center;flex-shrink:0;font-size:0.78rem;">⋯</div>
+            <div style="flex:1;">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+                    <span style="font-size:1rem;">${ACTION_ICONS[s.action] || '⚙️'}</span>
+                    <strong style="color:var(--accent-bright);font-size:0.88rem;">${s.action}</strong>
+                    <span style="color:var(--text-muted);font-size:0.78rem;">— ${s.goal}</span>
+                </div>
+                <div id="agent-step-result-${i}" style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">Queued…</div>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('agentExecArea').innerHTML = `
+        <div class="result-container">
+            <h3>⚙️ Execution Trace</h3>
+            ${stepShell}
+        </div>`;
+
+    showLoading('Agent executing plan…');
+    try {
+        const data = await api('/api/agent/execute', {
+            goal: agent.goal,
+            topic: agent.topic,
+            plan: agent.plan,
+            rationale: agent.rationale,
+        });
+        agent.session = data;
+
+        // Update each step UI with final results
+        (data.plan || []).forEach((s, i) => {
+            const statusEl = document.getElementById(`agent-step-status-${i}`);
+            const resultEl = document.getElementById(`agent-step-result-${i}`);
+            if (statusEl) {
+                if (s.status === 'done') {
+                    statusEl.style.background = 'rgba(45,212,191,0.15)';
+                    statusEl.style.color = 'var(--green)';
+                    statusEl.textContent = '✓';
+                } else {
+                    statusEl.style.background = 'rgba(255,107,138,0.15)';
+                    statusEl.style.color = 'var(--coral)';
+                    statusEl.textContent = '✗';
+                }
+            }
+            if (resultEl) {
+                resultEl.style.color = 'var(--text-secondary)';
+                resultEl.style.fontStyle = 'normal';
+                resultEl.textContent = s.result || '(no output)';
+            }
+        });
+
+        // Show artifacts
+        renderArtifacts(data.artifacts || {});
+
+        // Show verification quiz if generated
+        const quiz = (data.artifacts || {}).quiz;
+        if (quiz && quiz.questions && quiz.questions.length) {
+            renderAgentQuiz(quiz);
+        }
+
+        // Show final session report
+        if (data.final_summary) {
+            document.getElementById('agentReportArea').innerHTML = `
+                <div class="result-container">
+                    <h3>📜 Session Report</h3>
+                    <div class="markdown-body">${renderMarkdown(data.final_summary)}</div>
+                </div>`;
+        }
+    } catch (err) {
+        document.getElementById('agentExecArea').insertAdjacentHTML('beforeend',
+            `<div class="alert alert-error">Execution error: ${err.message}</div>`);
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderArtifacts(artifacts) {
+    const blocks = [];
+    if (artifacts.research) {
+        blocks.push({ label: '🔍 Research Brief', body: artifacts.research });
+    }
+    if (artifacts.notes) {
+        blocks.push({ label: '📝 Study Notes', body: artifacts.notes });
+    }
+    if (artifacts.concepts) {
+        blocks.push({ label: '💡 Key Concepts', body: artifacts.concepts });
+    }
+    if (artifacts.summary) {
+        blocks.push({ label: '📋 Summary', body: artifacts.summary });
+    }
+    if (!blocks.length) return;
+
+    const expanders = blocks.map((b, i) => `
+        <details ${i === 0 ? 'open' : ''} style="margin-bottom:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);">
+            <summary style="cursor:pointer;padding:14px 18px;color:var(--accent-bright);font-weight:600;font-size:0.9rem;list-style:none;">${b.label}</summary>
+            <div style="padding:0 18px 16px;" class="markdown-body">${renderMarkdown(b.body)}</div>
+        </details>`).join('');
+
+    document.getElementById('agentExecArea').insertAdjacentHTML('beforeend', `
+        <div class="result-container" style="margin-top:14px;">
+            <h3>📦 Artifacts Produced</h3>
+            ${expanders}
+        </div>`);
+}
+
+function renderAgentQuiz(quiz) {
+    agent.quizAnswers = {};
+    let html = `<div class="result-container">
+        <h3>✅ Verification Quiz: ${quiz.quiz_title || agent.topic}</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:14px;">Take the quiz — your score updates Vidya Smriti mastery.</p>`;
+
+    quiz.questions.forEach((q, qi) => {
+        html += `<div class="quiz-question" id="agent-q-${qi}">
+            <div class="q-number">Question ${qi + 1} · ${q.difficulty || 'medium'} · ${q.bloom_level || ''}</div>
+            <div class="q-text">${q.question}</div>`;
+        (q.options || []).forEach((opt, oi) => {
+            const safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += `<div class="quiz-option" id="agent-opt-${qi}-${oi}" onclick="agentSelectOption(${qi}, ${oi}, '${safeOpt}')">
+                <strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}
+            </div>`;
+        });
+        html += `<div class="quiz-explanation" id="agent-expl-${qi}">${q.explanation || ''}</div></div>`;
+    });
+
+    html += `<button class="btn btn-primary" style="margin-top:16px;" onclick="agentSubmitQuiz()">🎯 Submit & Update Mastery</button>
+    </div>`;
+    document.getElementById('agentQuizArea').innerHTML = html;
+    agent.quizQuestions = quiz.questions;
+}
+
+function agentSelectOption(qi, oi, value) {
+    document.querySelectorAll(`#agent-q-${qi} .quiz-option`).forEach(el => el.classList.remove('selected'));
+    document.getElementById(`agent-opt-${qi}-${oi}`).classList.add('selected');
+    agent.quizAnswers[qi] = value;
+}
+
+async function agentSubmitQuiz() {
+    if (!agent.quizQuestions) return;
+    let correct = 0;
+    agent.quizQuestions.forEach((q, qi) => {
+        const userAnswer = agent.quizAnswers[qi];
+        const isCorrect = userAnswer === q.correct_answer;
+        if (isCorrect) correct++;
+        (q.options || []).forEach((opt, oi) => {
+            const el = document.getElementById(`agent-opt-${qi}-${oi}`);
+            if (!el) return;
+            if (opt === q.correct_answer) el.classList.add('correct');
+            else if (opt === userAnswer && !isCorrect) el.classList.add('incorrect');
+        });
+        const expl = document.getElementById(`agent-expl-${qi}`);
+        if (expl) expl.classList.add('visible');
+    });
+    const total = agent.quizQuestions.length;
+    const pct = Math.round((correct / total) * 100);
+
+    try {
+        const verdict = await api('/api/agent/verify', {
+            topic: agent.topic, score: pct, correct, total,
+        });
+        const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--coral)';
+        document.getElementById('agentQuizArea').insertAdjacentHTML('beforeend', `
+            <div class="alert" style="background:rgba(124,108,255,0.08);border:1px solid rgba(124,108,255,0.2);margin-top:16px;">
+                Score: <strong style="color:${color};font-size:1.2rem;">${correct}/${total} (${pct}%)</strong>
+                — ${verdict.message}<br>
+                <span style="color:var(--text-muted);font-size:0.82rem;">Vidya Smriti mastery on <strong>${verdict.mastery.topic}</strong>:
+                ${Math.round(verdict.mastery.score)}% over ${verdict.mastery.attempts} attempt(s).</span>
+            </div>`);
+    } catch (err) {
+        document.getElementById('agentQuizArea').insertAdjacentHTML('beforeend',
+            `<div class="alert alert-error">Mastery update failed: ${err.message}</div>`);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GENERIC TOOL — one shell, configured per tool from the backend registry
+// ═══════════════════════════════════════════════════════════════════════════
+
+const genericState = { toolId: null, config: null };
+
+async function renderGenericPage(toolId) {
+    try {
+        const cfg = await api(`/api/tools/${toolId}`);
+        genericState.toolId = toolId;
+        genericState.config = cfg;
+
+        document.getElementById('genericIcon').textContent = cfg.icon || '⚙️';
+        document.getElementById('genericTitle').textContent = `${cfg.name} — ${cfg.description.split('.')[0]}`;
+        document.getElementById('genericBadge').textContent = cfg.category;
+        document.getElementById('genericDescription').textContent = cfg.description;
+        document.getElementById('genericInputLabel').textContent = cfg.input_label || 'Input';
+
+        const input = document.getElementById('genericInput');
+        input.placeholder = `Paste ${cfg.input_label?.toLowerCase() || 'content'} here…`;
+        input.value = '';
+
+        // Render options dynamically
+        const optsEl = document.getElementById('genericOptions');
+        optsEl.innerHTML = (cfg.options || []).map(opt => {
+            if (opt.type === 'select') {
+                const opts = (opt.values || []).map(v => `<option value="${v}">${v}</option>`).join('');
+                return `<div class="form-group">
+                    <label>${opt.label}</label>
+                    <select id="opt-${opt.id}">${opts}</select>
+                </div>`;
+            }
+            return `<div class="form-group">
+                <label>${opt.label}</label>
+                <input type="text" id="opt-${opt.id}" placeholder="${opt.placeholder || ''}">
+            </div>`;
+        }).join('');
+
+        document.getElementById('genericResult').innerHTML = '';
+    } catch (err) {
+        document.getElementById('genericResult').innerHTML =
+            `<div class="alert alert-error">Failed to load tool config: ${err.message}</div>`;
+    }
+}
+
+async function runGenericTool() {
+    const cfg = genericState.config;
+    if (!cfg) return;
+    const input = document.getElementById('genericInput').value.trim();
+    if (!input) return alert('Provide input first.');
+
+    const options = {};
+    (cfg.options || []).forEach(opt => {
+        const el = document.getElementById(`opt-${opt.id}`);
+        if (el) options[opt.id] = el.value;
+    });
+
+    showLoading(`Running ${cfg.name}…`);
+    try {
+        const data = await api(`/api/tools/${genericState.toolId}/run`, { input, options });
+
+        const resultEl = document.getElementById('genericResult');
+        if (data.kind === 'mermaid') {
+            resultEl.innerHTML = `<div class="result-container">
+                <h3>${cfg.icon} ${cfg.name} — Diagram</h3>
+                <div class="mindmap-container"><pre class="mermaid">${escapeHtml(data.result)}</pre></div>
+            </div>`;
+            try { await mermaid.run({ querySelector: '#genericResult .mermaid' }); } catch (e) { console.warn(e); }
+        } else if (data.kind === 'mermaid_with_text') {
+            // Extract mermaid block + remaining text
+            const m = data.result.match(/```mermaid\s*([\s\S]*?)```/);
+            const mer = m ? m[1].trim() : '';
+            const rest = m ? data.result.replace(m[0], '').trim() : data.result;
+            resultEl.innerHTML = `<div class="result-container">
+                <h3>${cfg.icon} ${cfg.name}</h3>
+                ${mer ? `<div class="mindmap-container" style="margin-bottom:14px;"><pre class="mermaid">${escapeHtml(mer)}</pre></div>` : ''}
+                <div class="markdown-body">${renderMarkdown(rest)}</div>
+            </div>`;
+            if (mer) { try { await mermaid.run({ querySelector: '#genericResult .mermaid' }); } catch (e) { console.warn(e); } }
+        } else {
+            resultEl.innerHTML = resultCard(`${cfg.icon} ${cfg.name}`, renderMarkdown(data.result));
+        }
+        // Stash result so chained tools can pick it up
+        if (typeof data.result === 'string') state.neuroreadContent = data.result;
+    } catch (err) {
+        document.getElementById('genericResult').innerHTML =
+            `<div class="alert alert-error">Error: ${err.message}</div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GRAPHIQ — 2D graphing via Desmos
+// ═══════════════════════════════════════════════════════════════════════════
+
+let desmosCalc = null;
+
+async function runGraphiQ() {
+    const desc = document.getElementById('graphiqDesc').value.trim();
+    if (!desc) return alert('Describe what to graph.');
+    showLoading('Translating description → equations…');
+    try {
+        const data = await api('/api/graphiq/equations', {
+            description: desc,
+            style: document.getElementById('graphiqStyle').value,
+        });
+        const explainEl = document.getElementById('graphiqResult');
+        explainEl.innerHTML = `<div class="result-container">
+            <h3>📊 Equations</h3>
+            <div class="markdown-body">${renderMarkdown(data.explanation || '')}</div>
+            <ul style="margin-top:10px;">${(data.equations || []).map(e => `<li><code>${e}</code></li>`).join('')}</ul>
+        </div>`;
+
+        const container = document.getElementById('desmos-container');
+        container.style.display = 'block';
+        if (!desmosCalc && typeof Desmos !== 'undefined') {
+            desmosCalc = Desmos.GraphingCalculator(container, {
+                expressions: true, settingsMenu: false, zoomButtons: true,
+            });
+        }
+        if (desmosCalc) {
+            desmosCalc.setBlank();
+            (data.equations || []).forEach((eq, i) => {
+                desmosCalc.setExpression({ id: `eq${i}`, latex: eq });
+            });
+            const w = data.window || { xmin: -10, xmax: 10, ymin: -10, ymax: 10 };
+            desmosCalc.setMathBounds({
+                left: w.xmin, right: w.xmax, bottom: w.ymin, top: w.ymax,
+            });
+        }
+    } catch (err) {
+        document.getElementById('graphiqResult').innerHTML =
+            `<div class="alert alert-error">Error: ${err.message}</div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  AUDIO OVERVIEW — script + MP3
+// ═══════════════════════════════════════════════════════════════════════════
+
+const audioState = { script: '' };
+
+async function generateAudioScript() {
+    const content = document.getElementById('audioContent').value.trim();
+    if (!content) return alert('Provide source content.');
+    showLoading('Writing spoken script…');
+    try {
+        const data = await api('/api/audio/script', {
+            content,
+            style: document.getElementById('audioStyle').value,
+            duration: document.getElementById('audioDuration').value,
+        });
+        audioState.script = data.script;
+        document.getElementById('audioResult').innerHTML = `<div class="result-container">
+            <h3>🎙️ Spoken Script</h3>
+            <div class="markdown-body" style="white-space:pre-wrap;">${escapeHtml(data.script)}</div>
+            <button class="btn btn-primary" style="margin-top:14px;" onclick="generateAudioMP3()">🔊 Synthesize MP3 →</button>
+        </div>`;
+    } catch (err) {
+        document.getElementById('audioResult').innerHTML =
+            `<div class="alert alert-error">Error: ${err.message}</div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+async function generateAudioMP3() {
+    let script = audioState.script;
+    if (!script) {
+        const content = document.getElementById('audioContent').value.trim();
+        if (!content) return alert('Generate the script first or paste content.');
+        await generateAudioScript();
+        script = audioState.script;
+    }
+    if (!script) return;
+
+    showLoading('Synthesizing audio (gTTS)…');
+    try {
+        const r = await fetch('/api/audio/audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                script,
+                accent: document.getElementById('audioAccent').value,
+            }),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById('audioResult').insertAdjacentHTML('beforeend', `
+            <div class="result-container" style="margin-top:14px;">
+                <h3>🔊 Audio</h3>
+                <audio controls style="width:100%;margin-top:8px;" src="${url}"></audio>
+                <a href="${url}" download="polaris_overview.mp3" class="btn btn-secondary btn-sm" style="margin-top:10px;">⬇️ Download MP3</a>
+            </div>`);
+    } catch (err) {
+        document.getElementById('audioResult').insertAdjacentHTML('beforeend',
+            `<div class="alert alert-error">Audio synthesis failed: ${err.message}</div>`);
     } finally {
         hideLoading();
     }

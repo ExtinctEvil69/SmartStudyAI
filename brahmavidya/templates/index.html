@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BrahmaVidya — Unified Learning Ecosystem</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <title>Polaris — Unified Learning Ecosystem</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://www.desmos.com/api/v1.7/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 </head>
 <body>
 
@@ -26,9 +27,9 @@
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <div class="brand-icon">🎓</div>
-            <h1>BrahmaVidya</h1>
-            <div class="subtitle">Gemma-powered learning</div>
+            <div class="brand-icon">⭐</div>
+            <h1>Polaris</h1>
+            <div class="subtitle">Your guiding star · Gemma-powered</div>
         </div>
 
         <div class="status-row" id="statusRow">
@@ -40,6 +41,13 @@
                 <div class="nav-section-label memory">Memory</div>
                 <div class="nav-item active" data-tool="dashboard" onclick="switchTool('dashboard')">
                     <span class="nav-icon">🧠</span> Vidya Smriti
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-label" style="color:#FFB84D;">Agent</div>
+                <div class="nav-item" data-tool="studyagent" onclick="switchTool('studyagent')">
+                    <span class="nav-icon">🤖</span> StudyAgent
                 </div>
             </div>
 
@@ -57,6 +65,9 @@
                 <div class="nav-item" data-tool="quizforge" onclick="switchTool('quizforge')">
                     <span class="nav-icon">📝</span> QuizForge
                 </div>
+                <div class="nav-item" data-tool="generic:paper_analyzer" onclick="switchTool('generic:paper_analyzer')">
+                    <span class="nav-icon">📄</span> PaperAnalyzer
+                </div>
             </div>
 
             <div class="nav-section">
@@ -67,11 +78,61 @@
                 <div class="nav-item" data-tool="prepmaster" onclick="switchTool('prepmaster')">
                     <span class="nav-icon">📋</span> PrepMaster
                 </div>
+                <div class="nav-item" data-tool="graphiq" onclick="switchTool('graphiq')">
+                    <span class="nav-icon">📊</span> GraphiQ
+                </div>
+                <div class="nav-item" data-tool="audio_overview" onclick="switchTool('audio_overview')">
+                    <span class="nav-icon">🎙️</span> AudioOverview
+                </div>
+                <div class="nav-item" data-tool="generic:writewise" onclick="switchTool('generic:writewise')">
+                    <span class="nav-icon">✍️</span> WriteWise
+                </div>
+                <div class="nav-item" data-tool="generic:studio" onclick="switchTool('generic:studio')">
+                    <span class="nav-icon">🎨</span> Studio
+                </div>
+                <div class="nav-item" data-tool="generic:multisource_synth" onclick="switchTool('generic:multisource_synth')">
+                    <span class="nav-icon">🔗</span> MultiSourceSynth
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-label" style="color:#2DD4BF;">Build</div>
+                <div class="nav-item" data-tool="generic:codebuddy" onclick="switchTool('generic:codebuddy')">
+                    <span class="nav-icon">👨‍💻</span> CodeBuddy
+                </div>
+                <div class="nav-item" data-tool="generic:dsa_sage" onclick="switchTool('generic:dsa_sage')">
+                    <span class="nav-icon">🧮</span> DSASage
+                </div>
+                <div class="nav-item" data-tool="generic:ideaspark" onclick="switchTool('generic:ideaspark')">
+                    <span class="nav-icon">💡</span> IdeaSpark
+                </div>
+                <div class="nav-item" data-tool="generic:feature_forge" onclick="switchTool('generic:feature_forge')">
+                    <span class="nav-icon">🛠️</span> FeatureForge
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-label" style="color:#FFB84D;">Code</div>
+                <div class="nav-item" data-tool="generic:codeflow" onclick="switchTool('generic:codeflow')">
+                    <span class="nav-icon">🔀</span> CodeFlow
+                </div>
+                <div class="nav-item" data-tool="generic:archviz" onclick="switchTool('generic:archviz')">
+                    <span class="nav-icon">🏗️</span> ArchViz
+                </div>
+                <div class="nav-item" data-tool="generic:logic_trace" onclick="switchTool('generic:logic_trace')">
+                    <span class="nav-icon">🔍</span> LogicTrace
+                </div>
+                <div class="nav-item" data-tool="generic:code_audit" onclick="switchTool('generic:code_audit')">
+                    <span class="nav-icon">🛡️</span> CodeAudit
+                </div>
+                <div class="nav-item" data-tool="generic:docgen" onclick="switchTool('generic:docgen')">
+                    <span class="nav-icon">📚</span> DocGen
+                </div>
             </div>
         </nav>
 
         <div class="sidebar-footer">
-            <p>Built for Gemma 4 Good Hackathon<br>Kaggle × Google DeepMind</p>
+            <p>Polaris · Built for Gemma 4 Good<br>Kaggle × Google DeepMind</p>
         </div>
     </aside>
 
@@ -138,6 +199,162 @@
                     </div>
                     <button class="btn btn-secondary btn-sm" onclick="saveProfile()">Save Profile</button>
                 </div>
+            </div>
+
+            <!-- ─── STUDYAGENT ─── -->
+            <div class="tool-page" id="page-studyagent">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🤖</div>
+                        <div>
+                            <h2>StudyAgent — Autonomous Learning Loop</h2>
+                            <span class="badge" style="background:rgba(255,184,77,0.15);color:#FFB84D;border-color:rgba(255,184,77,0.3);">Plan → Execute → Verify → Record</span>
+                        </div>
+                    </div>
+                    <p class="description">Give the agent a goal. It will <strong>Explore</strong> your prior mastery, <strong>Plan</strong> a multi-step study path, <strong>Execute</strong> each step using BrahmaVidya tools, <strong>Verify</strong> understanding with a quiz, and <strong>Record</strong> everything to Vidya Smriti.</p>
+                </div>
+
+                <!-- Phase 1: Goal input -->
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Learning Goal</label>
+                            <input type="text" id="agentGoal" placeholder="e.g. Understand how neural backpropagation works">
+                        </div>
+                        <div class="form-group">
+                            <label>Topic (tracked in memory)</label>
+                            <input type="text" id="agentTopic" placeholder="e.g. Backpropagation">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <button class="btn btn-primary" onclick="agentCreatePlan()">📋 Create Plan</button>
+                        <span style="color:var(--text-muted);font-size:0.78rem;">Step 1 · Agent explores memory and proposes a plan you can approve before execution.</span>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Plan approval -->
+                <div id="agentPlanArea"></div>
+
+                <!-- Phase 3: Execution trace -->
+                <div id="agentExecArea"></div>
+
+                <!-- Phase 4: Verification quiz -->
+                <div id="agentQuizArea"></div>
+
+                <!-- Phase 5: Session report -->
+                <div id="agentReportArea"></div>
+            </div>
+
+            <!-- ─── GENERIC TOOL (registry-driven, used by 11 tools) ─── -->
+            <div class="tool-page" id="page-generic">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon" id="genericIcon">⚙️</div>
+                        <div>
+                            <h2 id="genericTitle">Tool</h2>
+                            <span class="badge" id="genericBadge">Polaris</span>
+                        </div>
+                    </div>
+                    <p class="description" id="genericDescription">…</p>
+                </div>
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label id="genericInputLabel">Input</label>
+                        <textarea id="genericInput" rows="8" placeholder="Paste here…"></textarea>
+                    </div>
+                    <div id="genericOptions" class="form-row"></div>
+                    <button class="btn btn-primary" onclick="runGenericTool()">▶️ Run</button>
+                </div>
+                <div id="genericResult"></div>
+            </div>
+
+            <!-- ─── GRAPHIQ ─── -->
+            <div class="tool-page" id="page-graphiq">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">📊</div>
+                        <div>
+                            <h2>GraphiQ — Interactive 2D Graphing</h2>
+                            <span class="badge">Desmos</span>
+                        </div>
+                    </div>
+                    <p class="description">Describe an equation or shape in plain English. Polaris translates it into Desmos-rendered curves.</p>
+                </div>
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Describe what to graph</label>
+                        <input type="text" id="graphiqDesc" placeholder="e.g. a heart curve, projectile motion at 45°, sin(x) and its derivative">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Style</label>
+                            <select id="graphiqStyle">
+                                <option value="standard">Standard</option>
+                                <option value="physics">Physics templates</option>
+                                <option value="calculus">Calculus</option>
+                                <option value="implicit">Implicit curves</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="runGraphiQ()">📊 Graph It</button>
+                </div>
+                <div id="graphiqResult"></div>
+                <div id="desmos-container" style="width:100%;height:520px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-card);margin-top:14px;display:none;"></div>
+            </div>
+
+            <!-- ─── AUDIO OVERVIEW ─── -->
+            <div class="tool-page" id="page-audio_overview">
+                <div class="page-header">
+                    <div class="header-top">
+                        <div class="header-icon">🎙️</div>
+                        <div>
+                            <h2>AudioOverview — Podcast-Style Narration</h2>
+                            <span class="badge">gTTS</span>
+                        </div>
+                    </div>
+                    <p class="description">Turn any source content into a spoken overview. Generates a script first, then synthesizes MP3.</p>
+                </div>
+                <div class="glass-card" style="margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Source content</label>
+                        <textarea id="audioContent" rows="6" placeholder="Paste lecture notes, paper, transcript…"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Style</label>
+                            <select id="audioStyle">
+                                <option>Podcast (conversational)</option>
+                                <option>Lecture (formal)</option>
+                                <option>News brief</option>
+                                <option>Storytelling</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Length</label>
+                            <select id="audioDuration">
+                                <option>Short (3-5 min)</option>
+                                <option>Medium (5-10 min)</option>
+                                <option>Long (10-15 min)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Accent</label>
+                            <select id="audioAccent">
+                                <option value="us">US English</option>
+                                <option value="uk">UK English</option>
+                                <option value="au">Australian</option>
+                                <option value="in">Indian</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-secondary" onclick="generateAudioScript()">✍️ Generate Script</button>
+                        <button class="btn btn-primary" onclick="generateAudioMP3()">🔊 Generate MP3</button>
+                    </div>
+                </div>
+                <div id="audioResult"></div>
             </div>
 
             <!-- ─── NETSEEK ─── -->

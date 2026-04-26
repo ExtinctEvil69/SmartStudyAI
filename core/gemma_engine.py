@@ -127,22 +127,53 @@ def chat(messages: list[dict], config: GemmaConfig | None = None, stream_callbac
 
 
 def generate_json(prompt: str, config: GemmaConfig | None = None) -> dict | None:
-    """Generate and parse JSON output. Returns None on parse failure."""
+    """Generate and parse JSON output. Returns None on parse failure.
+
+    Robust to:
+      - markdown ```json fences
+      - LaTeX in string values (\vec, \hat, \frac — not valid JSON escapes)
+    """
     cfg = config or GemmaConfig()
-    cfg.temperature = 0.3  # Lower temp for structured output
+    cfg.temperature = 0.3
     result = generate(prompt, cfg)
-    # Try to extract JSON from the response
+    return _parse_json_lenient(result)
+
+
+def _parse_json_lenient(text: str) -> dict | None:
+    """Try several parse strategies before giving up."""
+    if not text:
+        return None
+    import re
+
+    # 1. Direct parse
     try:
-        return json.loads(result)
+        return json.loads(text)
     except json.JSONDecodeError:
-        # Try to find JSON in markdown code blocks
-        import re
-        match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", result, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except json.JSONDecodeError:
-                pass
+        pass
+
+    # 2. Strip markdown code fences
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
+    candidate = match.group(1) if match else text
+
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        pass
+
+    # 3. Escape lone backslashes not part of a valid JSON escape (\vec, \hat, \frac, ...)
+    fixed = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', candidate)
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        pass
+
+    # 4. Last resort — find the largest {...} block and try again
+    brace_match = re.search(r"\{.*\}", fixed, re.DOTALL)
+    if brace_match:
+        try:
+            return json.loads(brace_match.group(0))
+        except json.JSONDecodeError:
+            pass
     return None
 
 
